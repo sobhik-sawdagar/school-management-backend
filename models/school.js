@@ -37,19 +37,30 @@ class School {
       const [schools] = await pool.execute('SELECT * FROM schools');
       
       // Calculate and sort schools by distance
-      return schools.map(school => ({
-        ...school,
-        distance: `${require('../utils/geoDistance').calculateDistance(
+      const processedSchools = schools.map(school => {
+        const distance = require('../utils/geoDistance').calculateDistance(
           userLat, 
           userLon, 
           school.latitude, 
           school.longitude
-      ) + ' ' + 'Km'}`
-      })).sort((a, b) => a.distance - b.distance);
+        );
+        
+        return {
+          ...school,
+          distance: `${distance.toFixed(2)} Km`
+        };
+      }).sort((a, b) => {
+        // Convert distance string back to number for proper sorting
+        const distA = parseFloat(a.distance);
+        const distB = parseFloat(b.distance);
+        return distA - distB;
+      });
+
+      return processedSchools;
     } catch (error) {
       throw new Error(`Error listing schools: ${error.message}`);
     }
   }
 }
 
-module.exports = School; 
+module.exports = School;
